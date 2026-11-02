@@ -39,6 +39,15 @@
     const MAX_IMAGE_CHARS = 400_000
     /** Raw file ceiling before encoding. */
     const MAX_IMAGE_BYTES = 300 * 1024
+    /**
+     * Priority that shadows the shipped occupants of the brand slots.
+     *
+     * A single slot keeps one occupant per priority, the lowest live priority
+     * renders, and the default priority 0 is already taken by the shell's own
+     * fish logo and generic brand name. Registering one step below 0 replaces
+     * them without unregistering anybody, which no plugin can do.
+     */
+    const SLOT_PRIORITY = -1
     /** Text the native conversation headline renders; only these are replaced. */
     const NATIVE_HEADLINES = ['探索未至之境', 'Into the Unknown']
     /** Native running label prefixes; only these are replaced. */
@@ -207,6 +216,8 @@
       listeners: new Set(),
       /** Slot registration disposers, dropped before each repaint. */
       slotDisposers: [],
+      /** Slot keys our registration actually occupies this round. */
+      slotSeats: new Set(),
       /** MutationObserver / debounce handle for the DOM sweep. */
       observer: null,
       timer: 0,
@@ -390,6 +401,11 @@
       return false
     }
 
+    /** Whether this round's registration actually occupies the slot. */
+    function slotSeat(key) {
+      return state.slotSeats.has(key)
+    }
+
     /**
      * Register one occupant and remember its disposer.
      *
@@ -401,8 +417,12 @@
       const ctx = state.ctx
       if (!ctx || !ctx.slots || !slotDeclared(key)) return false
       try {
-        const dispose = ctx.slots.inject(key, () => ctx.slots.register({ name: key }, component))
+        const dispose = ctx.slots.inject(
+          key,
+          () => ctx.slots.register({ name: key, priority: SLOT_PRIORITY }, component),
+        )
         if (typeof dispose === 'function') state.slotDisposers.push(dispose)
+        state.slotSeats.add(key)
         return true
       } catch (error) {
         console.warn('[dsh-ui-custom] could not register', key, error)
@@ -411,6 +431,7 @@
     }
 
     function disposeSlots() {
+      state.slotSeats.clear()
       for (const dispose of state.slotDisposers.splice(0)) {
         try {
           dispose()
@@ -766,7 +787,7 @@
       const branding = state.branding
       const mark = sidebarMarkElement()
       const hasMark = sidebarImage(branding) !== '' || badgeText(branding) !== ''
-      if (mark && hasMark && !slotDeclared('sidebar.brand.mark')) {
+      if (mark && hasMark && !slotSeat('sidebar.brand.mark')) {
         if (!state.legacySidebar) state.legacySidebar = { mark, html: mark.innerHTML, rows: [] }
         if (mark.getAttribute('data-uic-mark') !== '1') {
           mark.setAttribute('data-uic-mark', '1')
@@ -785,7 +806,7 @@
         }
       }
       const nameElement = sidebarNameElement()
-      if (nameElement && branding.name && !slotDeclared('sidebar.brand.name')) {
+      if (nameElement && branding.name && !slotSeat('sidebar.brand.name')) {
         if (!state.legacySidebar) state.legacySidebar = { rows: [] }
         if (!state.legacySidebar.name) {
           state.legacySidebar.name = {
@@ -825,8 +846,11 @@
       paintFavicon()
       paintHeadline()
       paintRunning(state.branding)
-      if (state.legacySidebar || (!slotDeclared('sidebar.brand.mark') && !isBlank(state.branding))) paintLegacySidebar()
-      if (!isBlank(state.branding) && !slotDeclared('conversation.hero.brand.mark')) paintLegacyHero()
+      const painted = !isBlank(state.branding)
+      if (state.legacySidebar || (painted && !slotSeat('sidebar.brand.mark') && !slotSeat('sidebar.brand.name'))) {
+        paintLegacySidebar()
+      }
+      if (painted && !slotSeat('conversation.hero.brand.mark')) paintLegacyHero()
     }
 
     function schedulePaint() {

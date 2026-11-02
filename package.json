@@ -1,6 +1,6 @@
 {
   "name": "dsh-ui-custom",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "系统外观 (branding) for any DeepSeek Harness: system name, logo or text badge, tab icon, conversation headline and running label, all from one Settings section. · 任意 dsh 都可用的系统外观插件。",
   "repository": {
     "type": "git",

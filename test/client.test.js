@@ -184,7 +184,9 @@ function createReact() {
   }
 }
 
-function createContext({ spec } = {}) {
+const BRAND_SLOTS = ['conversation.hero.brand.mark', 'sidebar.brand.mark', 'sidebar.brand.name']
+
+function createContext({ spec, registerThrows = false } = {}) {
   const record = { injections: [], registrations: [], locale: [], labels: [] }
   const declared = spec || (() => ({ kind: 'single', scope: 'root' }))
   const ctx = {
@@ -202,6 +204,9 @@ function createContext({ spec } = {}) {
         const disposers = []
         const previous = ctx.slots.register
         ctx.slots.register = (options, component) => {
+          if (registerThrows && BRAND_SLOTS.includes(key)) {
+            throw new Error(`single slot "${key}" already has a registration at priority 0 (registered by test)`)
+          }
           record.registrations.push({ key, options, component })
           const dispose = () => {}
           disposers.push(dispose)
@@ -395,8 +400,11 @@ test('a saved appearance paints the title, favicon and brand slots', async () =>
   assert.match(favicon.getAttribute('href'), /^data:image\/svg\+xml,/u)
   assert.equal(favicon.getAttribute('type'), 'image/svg+xml')
 
-  for (const key of ['conversation.hero.brand.mark', 'sidebar.brand.mark', 'sidebar.brand.name']) {
+  for (const key of BRAND_SLOTS) {
     assert.ok(record.injections.includes(key), `${key} must be injected when the slot is declared`)
+    const attempted = record.registrations.find(entry => entry.key === key)
+    assert.ok(attempted, `${key} must be registered`)
+    assert.equal(attempted.options.priority, -1, `${key} must shadow the shipped occupant below priority 0`)
   }
 
   const components = record.registrations
@@ -450,6 +458,34 @@ test('the settings page renders its form for the current appearance', async () =
   assert.equal(page.children[0].type, 'style')
   assert.equal(page.children[page.children.length - 1].type, 'div')
   assert.equal(page.children[page.children.length - 1].props.className, 'uic-actions')
+})
+
+test('keeps painting when every brand seat is taken by the shipped occupant', async () => {
+  const config = {
+    name: 'Acme Console',
+    logo: '',
+    logoMode: 'text',
+    logoText: 'AC',
+    logoTextSize: 22,
+    headlineText: '',
+    runningText: '',
+    avatar: '',
+  }
+  const { module, document, listeners } = loadClient({ config })
+  const { ctx, record } = createContext({ registerThrows: true })
+  module.apply(ctx)
+  await flush()
+
+  assert.equal(document.title, 'Acme Console')
+  const favicon = document.head.children.find(child => child.tagName === 'LINK')
+  assert.ok(favicon, 'the favicon must still be installed')
+  for (const key of BRAND_SLOTS) assert.ok(record.injections.includes(key), `${key} must be attempted`)
+  assert.equal(
+    record.registrations.filter(entry => BRAND_SLOTS.includes(entry.key)).length,
+    0,
+    'no seat may be claimed when the registration is refused',
+  )
+  assert.ok(listeners.some(observer => observer.observed), 'the DOM sweep must run for the fallback')
 })
 
 test('falls back to the DOM path when the sidebar slots are not declared', async () => {
