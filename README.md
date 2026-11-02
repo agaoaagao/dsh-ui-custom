@@ -116,6 +116,11 @@ npm test        # node --test：配置校验、存储、HTTP 路由、插件装�
 - `lib/http.js` — 同源 JSON 路由
 - `client.js` — 浏览器半：设置页 + 界面绘制（槽位优先，DOM 兜底）
 
+槽位说明：`sidebar.brand.mark`、`sidebar.brand.name` 和 `conversation.hero.brand.mark`
+都是 `single` 槽，dsh 外壳已用 `priority: 0` 占位；同一 `priority` 再注册会直接抛错。
+本插件以 `priority: -1` 注册来影子化外壳的鲸鱼和默认名称（同槽位不同 `priority` 可共存，
+最低的那条渲染），注册失败时退回 DOM 绘制，不会影响原生界面。
+
 ## 仓库
 
 - GitHub: <https://github.com/agaoaagao/dsh-ui-custom>
