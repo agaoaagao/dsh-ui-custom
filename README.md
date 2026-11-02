@@ -32,7 +32,7 @@
 ### 方式一：装进当前 profile（手动）
 
 ```bash
-git clone <this-repo> ~/development/dsh-ui-custom
+git clone https://github.com/agaoaagao/dsh-ui-custom.git ~/development/dsh-ui-custom
 ```
 
 在 profile 的 `package.json`（例如 `~/.dsh/profiles/web/package.json`）里：
@@ -115,6 +115,11 @@ npm test        # node --test：配置校验、存储、HTTP 路由、插件装�
 - `lib/store.js` — 原子写入的 JSON 存储
 - `lib/http.js` — 同源 JSON 路由
 - `client.js` — 浏览器半：设置页 + 界面绘制（槽位优先，DOM 兜底）
+
+## 仓库
+
+- GitHub: <https://github.com/agaoaagao/dsh-ui-custom>
+- Gitea: <https://gitea.colacao.top/colacao/dsh-ui-custom>
 
 ## License
 
