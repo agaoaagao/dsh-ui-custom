@@ -1,0 +1,21 @@
+# The dsh-ui-custom bundle patch: one insert over the profile root that mounts
+# this plugin.
+#
+# A profile selects this layer by listing the package in `dsh.profile.bundles`,
+# which `dsh plugin add` does for a package declaring `dsh.bundle`. One row is
+# enough because the package is dual-face: this row loads the Node half (the
+# config API below), and the same package's `dsh.client` declaration makes
+# `dsh-client-modules` serve its `./client` bundle to the browser.
+#
+#   dataRoot  Where the appearance settings live. `dshHomePath` resolves inside
+#             DSH_HOME, so one machine's choices survive a checkout or cwd
+#             change and stay out of the dsh config tree. The plugin falls back
+#             to `$DSH_HOME/dsh-ui-custom` when this row carries no config, so a
+#             profile may omit the block entirely; overriding it replaces the
+#             whole config, so restate every key you need.
+
+- insert:
+    - id: dsh-ui-custom
+      name: 'dsh-ui-custom'
+      config:
+        dataRoot: !!js dshHomePath('dsh-ui-custom')

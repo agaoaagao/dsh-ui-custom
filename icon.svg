@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" role="img" aria-label="dsh-ui-custom">
+  <rect x="2" y="2" width="44" height="44" rx="12" fill="#0f1115"/>
+  <path d="M13 34V14h9.4c4.2 0 6.8 2.2 6.8 5.9 0 2.5-1.3 4.3-3.6 5.1 2.9.7 4.6 2.7 4.6 5.6 0 4.2-3.1 6.8-8.2 6.8H13Zm5.6-4.6h4.1c2.1 0 3.3-1 3.3-2.7 0-1.8-1.2-2.7-3.4-2.7h-4v5.4Zm0-11.3h3.6c1.9 0 3-.9 3-2.5s-1.1-2.5-3-2.5h-3.6v5Z" fill="#fff"/>
+  <circle cx="35" cy="34" r="5" fill="#ff6b35"/>
+</svg>
